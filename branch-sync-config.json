@@ -1,0 +1,7 @@
+{
+  "sync_rules": {
+    "Fibi-Release": ["Fibi-QA", "Fibi-Stage"],
+    "Fibi-QA": ["Fibi-Q3"],
+    "Fibi-Stage": ["Fibi-Release"]
+  }
+}

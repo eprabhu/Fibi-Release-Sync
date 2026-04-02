@@ -2,7 +2,7 @@
   "auto_pr_enabled": true,
   "rules": [
     {
-      "source_pattern": "Fibi-Release/",
+      "source_pattern": "Fibi-Release",
       "destinations": ["Fibi-Q3", "Fibi-QA", "Fibi-Stage"]
     }
   ]

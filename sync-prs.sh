@@ -23,6 +23,9 @@ get_destinations() {
     return 1
 }
 
+# The GitHub URL for your repository
+REPO_URL="https://github.com/eprabhu/Fibi-Release-Sync"
+
 # Get current branch
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
@@ -43,12 +46,13 @@ echo "$DESTINATIONS"
 echo "Syncing $CURRENT_BRANCH with origin..."
 git push origin "$CURRENT_BRANCH"
 
-# Loop through destinations and create PRs
+# Loop through destinations and generate PR links
 for DEST in $DESTINATIONS; do
     echo "----------------------------------------------------------"
     echo "Checking synchronization: $CURRENT_BRANCH -> $DEST"
     
     # Check if there are changes to sync between the branches on origin
+    git fetch origin > /dev/null 2>&1
     DIFF_COUNT=$(git rev-list --count "origin/$DEST..origin/$CURRENT_BRANCH")
     
     if [ "$DIFF_COUNT" -eq 0 ]; then
@@ -58,22 +62,24 @@ for DEST in $DESTINATIONS; do
 
     echo "New commits detected: $DIFF_COUNT"
 
-    # Create the Pull Request via GitHub CLI
-    # If gh-cli is not installed, it will print a manual link or useful error.
-    echo "Creating Pull Request to $DEST..."
-    gh pr create \
-        --base "$DEST" \
-        --head "$CURRENT_BRANCH" \
-        --title "Sync: $CURRENT_BRANCH updates $DEST" \
-        --body "Automated Pull Request from $CURRENT_BRANCH to $DEST summarizing recent changes." \
-        --draft=false
+    # GENERATE THE PR LINK
+    # The format is: REPO_URL/compare/BASE...HEAD
+    # We replace spaces with %20 for the URL
+    TITLE="Sync: $CURRENT_BRANCH to $DEST"
+    BODY="Automated sync of $DIFF_COUNT commits from $CURRENT_BRANCH."
     
-    if [ $? -eq 0 ]; then
-        echo "Successfully created PR for $DEST."
-    else
-        echo "Failed to create PR for $DEST. Make sure you have 'gh' installed and you are logged in (gh auth login)."
-        echo "Alternatively, you can open it manually at: https://github.com/eprabhu/Fibi-Release-Sync/compare/$DEST...$CURRENT_BRANCH"
-    fi
+    # Simple URL encoding for title and body (replaces space with +)
+    ENCODED_TITLE=$(echo "$TITLE" | sed 's/ /+/g')
+    ENCODED_BODY=$(echo "$BODY" | sed 's/ /+/g')
+
+    PR_LINK="$REPO_URL/compare/$DEST...$CURRENT_BRANCH?expand=1&title=$ENCODED_TITLE&body=$ENCODED_BODY"
+
+    echo "Link generated for $DEST:"
+    echo "$PR_LINK"
+    
+    # Automatically open the browser on Windows (where you are)
+    echo "Opening your browser to create the PR..."
+    start "$PR_LINK" 2>/dev/null || open "$PR_LINK" 2>/dev/null
 
 done
 
